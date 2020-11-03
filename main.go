@@ -17,18 +17,21 @@ var upgrader = websocket.Upgrader{
 
 
 func init() {
-	tpl = template.Must(template.ParseGlob("./*"))
+	tpl = template.Must(template.ParseGlob("public/*.html"))
 }
 
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/ws", wsEndPoint)
+	//http.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir("public"))))
+	http.Handle("/public/css/", http.StripPrefix("/public/css", http.FileServer(http.Dir("public/css"))))
+
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("home")
-	tpl.ExecuteTemplate(w, "index.gohtml", nil)
+	tpl.ExecuteTemplate(w, "index.html", nil)
 }
 
 func reader(conn *websocket.Conn) {
