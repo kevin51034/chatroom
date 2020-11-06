@@ -20,10 +20,10 @@ func main() {
 	go hub.run()
 
 	http.HandleFunc("/", index)
-	/*http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
-	})*/
-	http.HandleFunc("/ws", wsEndPoint)
+	})
+	//http.HandleFunc("/ws", wsEndPoint)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	//http.Handle("/public/css/", http.StripPrefix("/public/css", http.FileServer(http.Dir("public/css"))))
 	//http.Handle("/public/js/", http.StripPrefix("/public/js", http.FileServer(http.Dir("public/js"))))

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"fmt"
 
 	"github.com/gorilla/websocket"
 )
@@ -42,7 +43,11 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
+	// send chan []byte
+	send chan formatMessage
+
+	username string
+	room 	 string
 }
 
 
@@ -68,7 +73,19 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+
+		// broadcast the message to other users
+		c.hub.broadcast <- formatMessage{username:c.username, message: string(message), time: time.Now()}
+		fmt.Println(message)
+		fmt.Println(c.hub.clients)
+		// try response
+		/*
+		reply := string(message) + " receive message from client and send it back!"
+		if err := c.conn.WriteMessage(mt, []byte(reply)); err != nil {
+			log.Println(err)
+			return
+		}
+		*/
 	}
 }
 
@@ -85,7 +102,7 @@ func (c *Client) writePump() {
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
+		case msg, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -97,13 +114,13 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
-			w.Write(message)
-
+			w.Write([]byte(msg.message))
+			fmt.Println(msg)
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				//w.Write([]byte(<-c.send.message))
 			}
 
 			if err := w.Close(); err != nil {
@@ -126,7 +143,19 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	var username, room string
+	if _, ok := r.URL.Query()["username"]; ok {
+		fmt.Println(r.URL.Query()["username"])
+		username = r.URL.Query()["username"][0]
+	}
+	if _, ok := r.URL.Query()["room"]; ok {
+		fmt.Println(r.URL.Query()["room"])
+		room = r.URL.Query()["room"][0]
+	}
+
+	client := &Client{hub: hub, conn: conn, send: make(chan formatMessage), username: username, room: room}
+	fmt.Println(client)
+
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

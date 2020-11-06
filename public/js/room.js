@@ -13,6 +13,8 @@ console.log(room)
 
 const socket = io();
 
+
+/*
 // Join chatroom
 socket.emit('joinRoom', { username, room });
 
@@ -22,6 +24,7 @@ socket.on('roomUsers', ({ room, users }) => {
   outputUsers(users);
 });
 
+
 // Message from server
 socket.on('message', message => {
   //console.log(message);
@@ -30,13 +33,16 @@ socket.on('message', message => {
   // Scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
+*/
 
 // *****
 if (window["WebSocket"]) {
-  conn = new WebSocket("ws://" + document.location.host + "/ws");
+  conn = new WebSocket("ws://" + document.location.host + "/ws" + `?username=${username}&room=${room}`);
   console.log("build connection")
   outputRoomName(room);
   outputUsers(users);
+  socket.emit('joinRoom', { username, room });
+
   conn.onclose = function (evt) {
             /*var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
@@ -75,9 +81,11 @@ chatForm.addEventListener('submit', e => {
   if (!msg){
     return false;
   }
-
+  //outputMessage(msg)
+  /*
   // Emit message to server
   socket.emit('chatMessage', msg);
+  */
 
   // Clear input
   e.target.elements.msg.value = '';
@@ -90,12 +98,16 @@ function outputMessage(message) {
   div.classList.add('message');
   const p = document.createElement('p');
   p.classList.add('meta');
-  p.innerText = message.username;
+
+  //p.innerText = message.username;
+  p.innerText = username;
+
   p.innerHTML += `<span>${message.time}</span>`;
   div.appendChild(p);
   const para = document.createElement('p');
   para.classList.add('text');
-  para.innerText = message.text;
+  //para.innerText = message.text;
+  para.innerText = message;
   div.appendChild(para);
   document.querySelector('.chat-messages').appendChild(div);
 }
