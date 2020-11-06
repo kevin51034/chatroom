@@ -10,7 +10,6 @@ type Hub struct {
 	clients map[*Client]bool
 
 	// Inbound messages from the clients.
-	// TODO: modification type to send message, user and time
 	//broadcast chan []byte
 	broadcast chan formatMessage
 
@@ -33,7 +32,6 @@ func newHub() *Hub {
 	return &Hub{
 		//broadcast:  make(chan []byte),
 		broadcast:  make(chan formatMessage),
-
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
@@ -51,6 +49,31 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+			/*if message.Message == "welcome" {
+				for client := range h.clients {
+					if client.room == message.Room {
+						if client.username == message.Username {
+							welcomemsg := formatMessage{Username:"ChatBot", Room: client.room, 
+							Message: "Welcome to the chat room" + message.Username, Time: time.Now()}
+							select {
+							case client.send <- welcomemsg:
+							default:
+								close(client.send)
+								delete(h.clients, client)
+							}
+						} else {
+							welcomemsg := formatMessage{Username:"ChatBot", Room: client.room, 
+							Message: message.Username+ "has entered the chat", Time: time.Now()}
+							select {
+							case client.send <- welcomemsg:
+							default:
+								close(client.send)
+								delete(h.clients, client)
+							}
+						}
+					}
+				}
+			}*/
 			for client := range h.clients {
 				if client.room == message.Room {
 					select {
@@ -62,18 +85,5 @@ func (h *Hub) run() {
 				}
 			}
 		}
-
-		/*
-		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
-		}
-		*/
 	}
 }

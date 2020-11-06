@@ -73,6 +73,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
+
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
@@ -174,4 +175,6 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
+
+	//client.hub.broadcast <- formatMessage{Username:username, Room: room, Message: "welcome", Time: time.Now()}
 }
