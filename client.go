@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 	"fmt"
+	"encoding/json"
 
 	"github.com/gorilla/websocket"
 )
@@ -75,7 +76,7 @@ func (c *Client) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
-		c.hub.broadcast <- formatMessage{username:c.username, message: string(message), time: time.Now()}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Time: time.Now()}
 		fmt.Println(message)
 		fmt.Println(c.hub.clients)
 		// try response
@@ -114,8 +115,19 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
-			w.Write([]byte(msg.message))
+			//b, _ := json.Marshal(msg)
+
+			//w.Write([]byte(msg.message))
+
+			b, err := json.Marshal(msg) 
 			fmt.Println(msg)
+			fmt.Println(b)
+			/*writeerr := c.conn.WriteJSON(msg)
+			if writeerr != nil {
+				log.Println("write:", writeerr)
+			}*/
+			w.Write(b)
+
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {

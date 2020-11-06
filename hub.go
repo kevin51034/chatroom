@@ -23,9 +23,10 @@ type Hub struct {
 }
 
 type formatMessage struct {
-	username string
-    message string
-    time time.Time
+	Username string
+	Message string
+	Room string
+    Time time.Time
 }
 
 func newHub() *Hub {
@@ -51,14 +52,17 @@ func (h *Hub) run() {
 			}
 		case message := <-h.broadcast:
 			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+				if client.room == message.Room {
+					select {
+					case client.send <- message:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
 				}
 			}
 		}
+
 		/*
 		case message := <-h.broadcast:
 			for client := range h.clients {

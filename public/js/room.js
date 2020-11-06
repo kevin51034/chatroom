@@ -14,34 +14,13 @@ console.log(room)
 const socket = io();
 
 
-/*
-// Join chatroom
-socket.emit('joinRoom', { username, room });
-
-// Get room and users
-socket.on('roomUsers', ({ room, users }) => {
-  outputRoomName(room);
-  outputUsers(users);
-});
-
-
-// Message from server
-socket.on('message', message => {
-  //console.log(message);
-  outputMessage(message);
-
-  // Scroll down
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-});
-*/
-
 // *****
 if (window["WebSocket"]) {
   conn = new WebSocket("ws://" + document.location.host + "/ws" + `?username=${username}&room=${room}`);
   console.log("build connection")
   outputRoomName(room);
   outputUsers(users);
-  socket.emit('joinRoom', { username, room });
+  //socket.emit('joinRoom', { username, room });
 
   conn.onclose = function (evt) {
             /*var item = document.createElement("div");
@@ -50,15 +29,17 @@ if (window["WebSocket"]) {
             console.log("Connection close")
   };
   conn.onmessage = function (evt) {
-      var messages = evt.data.split('\n');
+    var msg = JSON.parse(evt.data);
+    console.log(msg)
+
+      //var messages = evt.data.split('\n');
       /*
       for (var i = 0; i < messages.length; i++) {
           var item = document.createElement("div");
           item.innerText = messages[i];
           appendLog(item);
       }*/
-      outputMessage(messages)
-      console.log(messages)
+      outputMessage(msg)
   };
 } else {
   /*var item = document.createElement("div");
@@ -100,14 +81,14 @@ function outputMessage(message) {
   p.classList.add('meta');
 
   //p.innerText = message.username;
-  p.innerText = username;
+  p.innerText = message.Username;
 
-  p.innerHTML += `<span>${message.time}</span>`;
+  p.innerHTML += `<span>${message.Time}</span>`;
   div.appendChild(p);
   const para = document.createElement('p');
   para.classList.add('text');
   //para.innerText = message.text;
-  para.innerText = message;
+  para.innerText = message.Message;
   div.appendChild(para);
   document.querySelector('.chat-messages').appendChild(div);
 }
