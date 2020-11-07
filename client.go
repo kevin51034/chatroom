@@ -107,7 +107,11 @@ func (c *Client) writePump() {
 		c.conn.Close()
 	}()
 	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now().Format("3:04 pm")}
-
+	var userlist []string
+	for client := range c.hub.clients {
+		userlist = append(userlist, client.username)
+	}
+	fmt.Println(userlist)
 	for {
 		select {
 		// formatMessage send from hub.broadcast

@@ -24,6 +24,8 @@ type Hub struct {
 type formatMessage struct {
 	Username string
 	Message string
+	// need to implement message type
+	Type string
 	Room string
     Time string
 }

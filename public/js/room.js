@@ -19,8 +19,7 @@ if (window["WebSocket"]) {
   conn = new WebSocket("ws://" + document.location.host + "/ws" + `?username=${username}&room=${room}`);
   console.log("build connection")
   outputRoomName(room);
-  outputUsers(users);
-  //socket.emit('joinRoom', { username, room });
+  outputUsers(username)
 /*
   var msg = {
     type: "TextMessage",
@@ -37,7 +36,10 @@ if (window["WebSocket"]) {
   conn.onmessage = function (evt) {
     var msg = JSON.parse(evt.data);
     console.log(msg)
+      // modify user list
+      if (msg.Username == "ChatBot") {
 
+      }
       //var messages = evt.data.split('\n');
       /*
       for (var i = 0; i < messages.length; i++) {
@@ -68,11 +70,6 @@ chatForm.addEventListener('submit', e => {
   if (!msg){
     return false;
   }
-  //outputMessage(msg)
-  /*
-  // Emit message to server
-  socket.emit('chatMessage', msg);
-  */
 
   // Clear input
   e.target.elements.msg.value = '';
@@ -105,7 +102,7 @@ function outputRoomName(room) {
 }
 
 // Add users to DOM
-function outputUsers(users) {
+function outputUsers(newuser) {
   userList.innerHTML = '';
   /*users.forEach(user=>{
     const li = document.createElement('li');
@@ -113,6 +110,6 @@ function outputUsers(users) {
     userList.appendChild(li);
   });*/
   const li = document.createElement('li');
-  li.innerText = username;
+  li.innerText = newuser;
   userList.appendChild(li);
 }
