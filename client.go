@@ -65,6 +65,8 @@ func (c *Client) readPump() {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
+	//c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now()}
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -77,7 +79,7 @@ func (c *Client) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Time: time.Now()}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Time: time.Now().Format("3:04 pm")}
 		fmt.Println(message)
 		fmt.Println(c.hub.clients)
 		// try response
@@ -99,11 +101,16 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Time: time.Now().Format("3:04 pm")}
+
 		ticker.Stop()
 		c.conn.Close()
 	}()
+	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now().Format("3:04 pm")}
+
 	for {
 		select {
+		// formatMessage send from hub.broadcast
 		case msg, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
@@ -116,25 +123,19 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
-			//b, _ := json.Marshal(msg)
-
-			//w.Write([]byte(msg.message))
 
 			b, err := json.Marshal(msg) 
 			fmt.Println(msg)
-			fmt.Println(b)
-			/*writeerr := c.conn.WriteJSON(msg)
-			if writeerr != nil {
-				log.Println("write:", writeerr)
-			}*/
+			//fmt.Println(b)
+
 			w.Write(b)
 
 			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
+			/*n := len(c.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
 				//w.Write([]byte(<-c.send.message))
-			}
+			}*/
 
 			if err := w.Close(); err != nil {
 				return
@@ -167,14 +168,16 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{hub: hub, conn: conn, send: make(chan formatMessage), username: username, room: room}
-	fmt.Println(client)
+	//fmt.Println(client)
 
 	client.hub.register <- client
+	
+	//msg := formatMessage{Username:username, Room: room, Message: "welcome", Time: time.Now()}
+	//client.hub.broadcast <- msg
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
 
-	//client.hub.broadcast <- formatMessage{Username:username, Room: room, Message: "welcome", Time: time.Now()}
 }

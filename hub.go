@@ -25,7 +25,7 @@ type formatMessage struct {
 	Username string
 	Message string
 	Room string
-    Time time.Time
+    Time string
 }
 
 func newHub() *Hub {
@@ -49,12 +49,12 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			/*if message.Message == "welcome" {
+			if message.Message == "welcome" || message.Message == "leave" {
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
 							welcomemsg := formatMessage{Username:"ChatBot", Room: client.room, 
-							Message: "Welcome to the chat room" + message.Username, Time: time.Now()}
+							Message: "Welcome to the chat room " + message.Username, Time: time.Now().Format("3:04 pm")}
 							select {
 							case client.send <- welcomemsg:
 							default:
@@ -62,10 +62,16 @@ func (h *Hub) run() {
 								delete(h.clients, client)
 							}
 						} else {
-							welcomemsg := formatMessage{Username:"ChatBot", Room: client.room, 
-							Message: message.Username+ "has entered the chat", Time: time.Now()}
+							var msg formatMessage
+							if message.Message == "welcome" {
+								msg = formatMessage{Username:"ChatBot", Room: client.room, 
+								Message: message.Username+ " has entered the chat", Time: time.Now().Format("3:04 pm")}
+							} else if message.Message == "leave" {
+								msg = formatMessage{Username:"ChatBot", Room: client.room, 
+								Message: message.Username+ " has left the chat", Time: time.Now().Format("3:04 pm")}
+							}
 							select {
-							case client.send <- welcomemsg:
+							case client.send <- msg:
 							default:
 								close(client.send)
 								delete(h.clients, client)
@@ -73,14 +79,15 @@ func (h *Hub) run() {
 						}
 					}
 				}
-			}*/
-			for client := range h.clients {
-				if client.room == message.Room {
-					select {
-					case client.send <- message:
-					default:
-						close(client.send)
-						delete(h.clients, client)
+			} else {
+				for client := range h.clients {
+					if client.room == message.Room {
+						select {
+						case client.send <- message:
+						default:
+							close(client.send)
+							delete(h.clients, client)
+						}
 					}
 				}
 			}

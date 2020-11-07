@@ -21,15 +21,13 @@ if (window["WebSocket"]) {
   outputRoomName(room);
   outputUsers(users);
   //socket.emit('joinRoom', { username, room });
+/*
   var msg = {
     type: "TextMessage",
     text: "welcome to chat",
   };
-
-  conn.addEventListener('open', function () {
-    conn.send(JSON.stringify(msg));
-  });
-
+  conn.send(JSON.stringify(msg));
+*/
   conn.onclose = function (evt) {
             /*var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
