@@ -79,7 +79,7 @@ func (c *Client) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Type:"chatmessage", Time: time.Now().Format("3:04 pm")}
 		fmt.Println(message)
 		fmt.Println(c.hub.clients)
 		// try response
@@ -101,17 +101,14 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 
 		ticker.Stop()
 		c.conn.Close()
 	}()
-	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now().Format("3:04 pm")}
-	var userlist []string
-	for client := range c.hub.clients {
-		userlist = append(userlist, client.username)
-	}
-	fmt.Println(userlist)
+	// broadcast welcome messages
+	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+	
 	for {
 		select {
 		// formatMessage send from hub.broadcast
@@ -127,7 +124,14 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
+			// update user list
+			var userlist []string
+			for client := range c.hub.clients {
+				userlist = append(userlist, client.username)
+			}
+			//m["new_key"] = newValue
 
+			msg.Userlist = userlist
 			b, err := json.Marshal(msg) 
 			fmt.Println(msg)
 			//fmt.Println(b)

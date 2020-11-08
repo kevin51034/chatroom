@@ -25,7 +25,9 @@ type formatMessage struct {
 	Username string
 	Message string
 	// need to implement message type
+	// chatmessage / botmessage
 	Type string
+	Userlist []string
 	Room string
     Time string
 }
@@ -51,7 +53,9 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			if message.Message == "welcome" || message.Message == "leave" {
+			//if message.Message == "welcome" || message.Message == "leave" {
+			// botmessages
+			if message.Type == "botmessage" {
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
@@ -81,7 +85,8 @@ func (h *Hub) run() {
 						}
 					}
 				}
-			} else {
+			} else if message.Type == "chatmessage" {
+				// chatmessages
 				for client := range h.clients {
 					if client.room == message.Room {
 						select {
