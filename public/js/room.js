@@ -11,7 +11,7 @@ const { username, room } = Qs.parse(location.search, {
 console.log(username)
 console.log(room)
 
-const socket = io();
+//const socket = io();
 
 
 // *****
@@ -20,13 +20,7 @@ if (window["WebSocket"]) {
   console.log("build connection")
   outputRoomName(room);
   outputUsers(username)
-/*
-  var msg = {
-    type: "TextMessage",
-    text: "welcome to chat",
-  };
-  conn.send(JSON.stringify(msg));
-*/
+
   conn.onclose = function (evt) {
             /*var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
@@ -36,18 +30,9 @@ if (window["WebSocket"]) {
   conn.onmessage = function (evt) {
     var msg = JSON.parse(evt.data);
     console.log(msg)
-      // modify user list
-      if (msg.Username == "ChatBot") {
-
-      }
-      //var messages = evt.data.split('\n');
-      /*
-      for (var i = 0; i < messages.length; i++) {
-          var item = document.createElement("div");
-          item.innerText = messages[i];
-          appendLog(item);
-      }*/
-      outputMessage(msg)
+    // modify user list
+    outputUsers(msg.Userlist)
+    outputMessage(msg)
   };
 } else {
   /*var item = document.createElement("div");
@@ -82,15 +67,11 @@ function outputMessage(message) {
   div.classList.add('message');
   const p = document.createElement('p');
   p.classList.add('meta');
-
-  //p.innerText = message.username;
   p.innerText = message.Username;
-
-  p.innerHTML += `<span>${message.Time}</span>`;
+  p.innerHTML += `<span> ${message.Time} </span>`;
   div.appendChild(p);
   const para = document.createElement('p');
   para.classList.add('text');
-  //para.innerText = message.text;
   para.innerText = message.Message;
   div.appendChild(para);
   document.querySelector('.chat-messages').appendChild(div);
@@ -104,12 +85,9 @@ function outputRoomName(room) {
 // Add users to DOM
 function outputUsers(newuser) {
   userList.innerHTML = '';
-  /*users.forEach(user=>{
+  for (i=0; i<newuser.length; i++) {
     const li = document.createElement('li');
-    li.innerText = user.username;
+    li.innerText = newuser[i];
     userList.appendChild(li);
-  });*/
-  const li = document.createElement('li');
-  li.innerText = newuser;
-  userList.appendChild(li);
+  }
 }

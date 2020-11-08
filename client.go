@@ -66,7 +66,6 @@ func (c *Client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	//c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now()}
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -79,17 +78,8 @@ func (c *Client) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Type:"chatmessage", Time: time.Now().Format("3:04 pm")}
 		fmt.Println(message)
-		fmt.Println(c.hub.clients)
-		// try response
-		/*
-		reply := string(message) + " receive message from client and send it back!"
-		if err := c.conn.WriteMessage(mt, []byte(reply)); err != nil {
-			log.Println(err)
-			return
-		}
-		*/
 	}
 }
 
@@ -101,17 +91,14 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 
 		ticker.Stop()
 		c.conn.Close()
 	}()
-	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Time: time.Now().Format("3:04 pm")}
-	var userlist []string
-	for client := range c.hub.clients {
-		userlist = append(userlist, client.username)
-	}
-	fmt.Println(userlist)
+	// broadcast welcome messages
+	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+	
 	for {
 		select {
 		// formatMessage send from hub.broadcast
@@ -127,11 +114,15 @@ func (c *Client) writePump() {
 			if err != nil {
 				return
 			}
+			// update user list
+			var userlist []string
+			for client := range c.hub.clients {
+				userlist = append(userlist, client.username)
+			}
 
+			msg.Userlist = userlist
 			b, err := json.Marshal(msg) 
 			fmt.Println(msg)
-			//fmt.Println(b)
-
 			w.Write(b)
 
 			// Add queued chat messages to the current websocket message.
@@ -172,12 +163,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{hub: hub, conn: conn, send: make(chan formatMessage), username: username, room: room}
-	//fmt.Println(client)
-
 	client.hub.register <- client
-	
-	//msg := formatMessage{Username:username, Room: room, Message: "welcome", Time: time.Now()}
-	//client.hub.broadcast <- msg
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.

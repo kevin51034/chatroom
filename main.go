@@ -25,10 +25,7 @@ func main() {
 	})
 	//http.HandleFunc("/ws", wsEndPoint)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
-	//http.Handle("/public/css/", http.StripPrefix("/public/css", http.FileServer(http.Dir("public/css"))))
-	//http.Handle("/public/js/", http.StripPrefix("/public/js", http.FileServer(http.Dir("public/js"))))
-
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
