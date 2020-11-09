@@ -19,7 +19,6 @@ if (window["WebSocket"]) {
   conn = new WebSocket("ws://" + document.location.host + "/ws" + `?username=${username}&room=${room}`);
   console.log("build connection")
   outputRoomName(room);
-  outputUsers(username)
 
   conn.onclose = function (evt) {
             /*var item = document.createElement("div");
@@ -31,7 +30,9 @@ if (window["WebSocket"]) {
     var msg = JSON.parse(evt.data);
     console.log(msg)
     // modify user list
-    outputUsers(msg.Userlist)
+    if (msg.Userlist) {
+      outputUsers(msg.Userlist)
+    }
     outputMessage(msg)
   };
 } else {

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"log"
-	"html/template"
 	"github.com/gorilla/websocket"
+	"html/template"
+	"log"
+	"net/http"
 )
 
 var tpl *template.Template
@@ -51,9 +51,9 @@ func reader(conn *websocket.Conn) {
 func wsEndPoint(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("wsEndPoint")
 	conn, err := upgrader.Upgrade(w, req, nil)
-    if err != nil {
-        log.Println(err)
-        return
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	fmt.Println("client successfully connected...")
 	reader(conn)

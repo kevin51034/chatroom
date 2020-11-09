@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
-	"encoding/json"
 
 	"github.com/gorilla/websocket"
 )
@@ -33,7 +33,7 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -48,9 +48,8 @@ type Client struct {
 	send chan formatMessage
 
 	username string
-	room 	 string
+	room     string
 }
-
 
 // readPump pumps messages from the websocket connection to the hub.
 //
@@ -78,7 +77,7 @@ func (c *Client) readPump() {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		// broadcast the message to other users
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: string(message), Type:"chatmessage", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: string(message), Type: "chatmessage", Time: time.Now().Format("3:04 pm")}
 		fmt.Println(message)
 	}
 }
@@ -91,14 +90,14 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+		c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: "leave", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 
 		ticker.Stop()
 		c.conn.Close()
 	}()
 	// broadcast welcome messages
-	c.hub.broadcast <- formatMessage{Username:c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
-	
+	c.hub.broadcast <- formatMessage{Username: c.username, Room: c.room, Message: "welcome", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
+
 	for {
 		select {
 		// formatMessage send from hub.broadcast
@@ -115,13 +114,15 @@ func (c *Client) writePump() {
 				return
 			}
 			// update user list
-			var userlist []string
-			for client := range c.hub.clients {
-				userlist = append(userlist, client.username)
+			if msg.Type == "botmessage" {
+				var userlist []string
+				for client := range c.hub.clients {
+					userlist = append(userlist, client.username)
+				}
+				msg.Userlist = userlist
 			}
 
-			msg.Userlist = userlist
-			b, err := json.Marshal(msg) 
+			b, err := json.Marshal(msg)
 			fmt.Println(msg)
 			w.Write(b)
 
@@ -143,7 +144,6 @@ func (c *Client) writePump() {
 		}
 	}
 }
-
 
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {

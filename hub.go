@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 )
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -11,7 +12,6 @@ type Hub struct {
 
 	// Inbound messages from the clients.
 	broadcast chan formatMessage
-
 
 	// Register requests from the clients.
 	register chan *Client
@@ -22,12 +22,12 @@ type Hub struct {
 
 type formatMessage struct {
 	Username string
-	Message string
+	Message  string
 	// chatmessage / botmessage for message type
-	Type string
+	Type     string
 	Userlist []string
-	Room string
-    Time string
+	Room     string
+	Time     string
 }
 
 func newHub() *Hub {
@@ -56,8 +56,8 @@ func (h *Hub) run() {
 				for client := range h.clients {
 					if client.room == message.Room {
 						if client.username == message.Username {
-							welcomemsg := formatMessage{Username:"ChatBot", Room: client.room, 
-							Message: "Welcome to the chat room " + message.Username, Time: time.Now().Format("3:04 pm")}
+							welcomemsg := formatMessage{Username: "ChatBot", Room: client.room,
+								Message: "Welcome to the chat room " + message.Username, Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							select {
 							case client.send <- welcomemsg:
 							default:
@@ -67,11 +67,11 @@ func (h *Hub) run() {
 						} else {
 							var msg formatMessage
 							if message.Message == "welcome" {
-								msg = formatMessage{Username:"ChatBot", Room: client.room, 
-								Message: message.Username+ " has entered the chat", Time: time.Now().Format("3:04 pm")}
+								msg = formatMessage{Username: "ChatBot", Room: client.room,
+									Message: message.Username + " has entered the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							} else if message.Message == "leave" {
-								msg = formatMessage{Username:"ChatBot", Room: client.room, 
-								Message: message.Username+ " has left the chat", Time: time.Now().Format("3:04 pm")}
+								msg = formatMessage{Username: "ChatBot", Room: client.room,
+									Message: message.Username + " has left the chat", Type: "botmessage", Time: time.Now().Format("3:04 pm")}
 							}
 							select {
 							case client.send <- msg:
