@@ -1,4 +1,4 @@
-# chatroom
+# Chatroom
 a real-time chat room using gorilla websocket in golang
 
 
